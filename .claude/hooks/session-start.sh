@@ -1,5 +1,5 @@
 #!/bin/bash
-# Installs the media tools the watch plugin (bradautomates/claude-video) needs
+# Prepares the watch skill (.claude/skills/watch, from bradautomates/claude-video)
 # in Claude Code cloud sessions. Python 3.10+ and ffmpeg/ffprobe ship with the
 # image; yt-dlp (latest) and Deno (YouTube JS runtime) are installed here.
 set -euo pipefail
@@ -26,6 +26,13 @@ fi
 
 if [ -n "${CLAUDE_ENV_FILE:-}" ]; then
   echo "export PATH=\"$LOCAL_BIN:\$PATH\"" >> "$CLAUDE_ENV_FILE"
+fi
+
+# ~/.config/watch does not survive between sessions. With GEMINI_API_KEY set in
+# the environment, select the Gemini engine so watch skips its first-run setup.
+if [ -n "${GEMINI_API_KEY:-}" ]; then
+  python3 "$CLAUDE_PROJECT_DIR/.claude/skills/watch/scripts/setup.py" --engine gemini >/dev/null \
+    || echo "watch: Gemini engine setup failed" >&2
 fi
 
 echo "watch deps: yt-dlp $(yt-dlp --version), $(deno --version | head -1), $(ffmpeg -version | head -1 | cut -d' ' -f1-3)" >&2
